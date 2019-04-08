@@ -123,13 +123,18 @@ for(j in levels(as.factor(gg10$participation))) {
 
 # save(ggg10, file = "F:/bat veolia mnhn/data/ggg10")
 
-############ computing CSI based on sample data (in order: for the 1st night, for the 1st + 2nd nights, etc...)
+############ computing CSI based on sample data (1. in order: for the 1st night, for the 1st + 2nd nights, etc...;
+# 2. random; 3. ordered sampling, but taking 1 extra night only for "true CSI")
 
 pawa <- c() 
 for(j in levels(as.factor(ggg10$participation))) {
   sub <- ggg10[ggg10$participation == j, ]
   for(l in 1:nrow(sub)){
-      susub <- sub[1:l, ]
+      susub <- sub[1:l, ]  # 1. ordered sampling
+      # susub <- sub[sample(l), ] # 2. random sampling
+      
+      sususub <- sub[c(1:l, l+1), ] # 3. true CSI = CSI 1:n+1
+
       trueab <- sum(sub$nb_contacts) / nrow(sub)
       falseab <- sum(susub$nb_contacts) / nrow(sub)
       delta.abund <- trueab - falseab
@@ -137,7 +142,9 @@ for(j in levels(as.factor(ggg10$participation))) {
       wcsi <- sum(na.omit(susub$ssi)*susub$nb_contact) / sum(na.omit(susub$nb_contact))
       # csi.p <- sum(na.omit(susub$ssi.presence)*susub$nb_contact) / sum(susub$nb_contact)
       
-      tcsi <- susub$truecsi
+      # tcsi <- susub$truecsi # for ordered and random sampling only (not for the 1 extra night thing)
+      tcsi <- sum(na.omit(sususub$ssi)*sususub$nb_contact) / sum(na.omit(sususub$nb_contact))
+      
       n.night <- l
       paw <- cbind(j, trueab, delta.abund, wcsi, tcsi, n.night)
       pawa <- as.data.frame(rbind(pawa, paw))
